@@ -1,5 +1,5 @@
-import Combine
 import KeyboardShortcuts
+import Security
 import SwiftUI
 
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -9,26 +9,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkeyEventTap: CFMachPort?
     private var hotkeyEventTapSource: CFRunLoopSource?
     var isHotkeyPressed = false
-    private var cancellables = Set<AnyCancellable>()
     private var lastHandledHotkeyTimestamp: TimeInterval = 0
     private var lastHandledHotkeyPressedState = false
     private var globalKeyDownMonitor: Any?
     private var localKeyDownMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        purgeLegacyLicenseKeychainItem()
+
         miniRecorderController = MiniRecorderWindowController()
 
         // Setup dynamic hotkey monitoring based on user selection
         setupHotkeyMonitoring()
+    }
 
-        checkForUpdatesOnLaunch()
-
-        UpdateService.shared.showUpdateWindowPublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.showUpdateWindow()
-            }
-            .store(in: &cancellables)
+    /// One-time best-effort removal of any license key stored by prior (Polar) builds.
+    private func purgeLegacyLicenseKeychainItem() {
+        let query: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: "sh.polar.speaktype.license",
+            kSecAttrAccount: "license_key",
+        ]
+        SecItemDelete(query as CFDictionary)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -90,7 +92,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupSuppressingHotkeyEventTap() {
         guard hotkeyEventTap == nil else { return }
 
-        let eventMask = (1 << CGEventType.flagsChanged.rawValue)
+        let eventMask =
+            (1 << CGEventType.flagsChanged.rawValue)
+            | (1 << CGEventType.keyDown.rawValue)
+            | (1 << CGEventType.keyUp.rawValue)
         let callback: CGEventTapCallBack = { _, type, event, refcon in
             guard let refcon else {
                 return Unmanaged.passUnretained(event)
@@ -130,31 +135,50 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return Unmanaged.passUnretained(event)
         }
 
-        guard type == .flagsChanged else {
-            return Unmanaged.passUnretained(event)
-        }
-
         let currentHotkey = getSelectedHotkey()
-        guard currentHotkey == .fn else {
-            return Unmanaged.passUnretained(event)
-        }
-
         let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
-        guard keyCode == currentHotkey.keyCode else {
+
+        switch type {
+        case .flagsChanged:
+            // Only the Fn key is suppressed here so terminals don't receive raw CSI sequences;
+            // other modifier hotkeys are handled (unsuppressed) by the NSEvent flagsChanged monitor.
+            guard currentHotkey == .fn, keyCode == currentHotkey.keyCode else {
+                return Unmanaged.passUnretained(event)
+            }
+            let isPressed = event.flags.contains(.maskSecondaryFn)
+            DispatchQueue.main.async { [weak self] in
+                self?.handleHotkeyStateChange(isPressed: isPressed)
+            }
+            return nil
+
+        case .keyDown, .keyUp:
+            // Combo hotkeys (e.g. ⌘2) are non-modifier keys, so they ride keyDown/keyUp.
+            // Suppress them so the combo is not also delivered to the focused app.
+            guard !currentHotkey.isModifierOnly, keyCode == currentHotkey.keyCode else {
+                return Unmanaged.passUnretained(event)
+            }
+            if type == .keyDown {
+                guard event.flags.contains(currentHotkey.cgModifierFlag) else {
+                    return Unmanaged.passUnretained(event)
+                }
+                DispatchQueue.main.async { [weak self] in
+                    self?.handleHotkeyStateChange(isPressed: true)
+                }
+            } else {
+                DispatchQueue.main.async { [weak self] in
+                    self?.handleHotkeyStateChange(isPressed: false)
+                }
+            }
+            return nil
+
+        default:
             return Unmanaged.passUnretained(event)
         }
-
-        let isPressed = event.flags.contains(.maskSecondaryFn)
-        DispatchQueue.main.async { [weak self] in
-            self?.handleHotkeyStateChange(isPressed: isPressed)
-        }
-
-        // Suppress the Fn flagsChanged event so terminal apps do not receive raw CSI sequences.
-        return nil
     }
 
     private func handleHotkeyEvent(_ event: NSEvent) {
         let currentHotkey = getSelectedHotkey()
+        guard currentHotkey.isModifierOnly else { return }  // combos handled by the event tap
         guard event.keyCode == currentHotkey.keyCode else { return }
 
         let isPressed = event.modifierFlags.contains(currentHotkey.modifierFlag)
@@ -230,37 +254,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return option
         }
 
-        return .fn
-    }
-
-    // MARK: - Update Checking
-
-    private func checkForUpdatesOnLaunch() {
-        let updateService = UpdateService.shared
-        let autoUpdate = UserDefaults.standard.bool(forKey: "autoUpdate")
-        guard autoUpdate && updateService.shouldCheckForUpdates() else { return }
-
-        Task {
-            await updateService.checkForUpdates(silent: true)
-            if updateService.availableUpdate != nil && updateService.shouldShowReminder() {
-                await MainActor.run { self.showUpdateWindow() }
-            }
-        }
-    }
-
-    private func showUpdateWindow() {
-        guard let update = UpdateService.shared.availableUpdate else { return }
-
-        let updateSheetView = UpdateSheet(update: update)
-        let hostingController = NSHostingController(rootView: updateSheetView)
-
-        let window = NSWindow(contentViewController: hostingController)
-        window.title = "Software Update"
-        window.styleMask = [.titled, .closable]
-        window.isReleasedWhenClosed = false
-        window.center()
-        window.isMovableByWindowBackground = true
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate()
+        return .commandTwo
     }
 }

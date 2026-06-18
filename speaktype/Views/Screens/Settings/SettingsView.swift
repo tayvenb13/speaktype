@@ -86,8 +86,7 @@ struct SettingsTabButton: View {
 
 struct GeneralSettingsTab: View {
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
-    @AppStorage("autoUpdate") private var autoUpdate = true
-    @AppStorage("selectedHotkey") private var selectedHotkey: HotkeyOption = .fn
+    @AppStorage("selectedHotkey") private var selectedHotkey: HotkeyOption = .commandTwo
     @AppStorage("recordingMode") private var recordingMode: Int = 0  // 0: Hold to record, 1: Toggle
     @AppStorage("showMenuBarIcon") private var showMenuBarIcon: Bool = true
     @AppStorage("transcriptionLanguage") private var transcriptionLanguage: String = "auto"
@@ -103,12 +102,6 @@ struct GeneralSettingsTab: View {
         recents.insert(code, at: 0)
         recentLanguagesString = recents.prefix(5).joined(separator: ",")
     }
-
-    @StateObject private var updateService = UpdateService.shared
-    @EnvironmentObject var licenseManager: LicenseManager
-
-    @State private var showLicenseSheet = false
-    @State private var showDeactivateAlert = false
 
     var body: some View {
         ScrollView {
@@ -279,92 +272,18 @@ struct GeneralSettingsTab: View {
                         .padding(.top, 4)
                 }
 
-                // Updates
+                // About
                 SettingsSection {
                     SettingsSectionHeader(
-                        icon: "arrow.down.circle", title: "Updates",
+                        icon: "info.circle", title: "About",
                         subtitle: "SpeakType \(AppVersion.currentVersion)")
 
-                    VStack(spacing: 16) {
-                        HStack {
-                            Text("Automatically check for updates")
-                                .font(Typography.bodyMedium)
-                                .foregroundStyle(Color.textPrimary)
-                            Spacer()
-                            Toggle("", isOn: $autoUpdate)
-                                .labelsHidden()
-                        }
-
-                        Button(action: {
-                            Task {
-                                await updateService.checkForUpdates()
-                            }
-                        }) {
-                            HStack(spacing: 6) {
-                                if updateService.isCheckingForUpdates {
-                                    ProgressView()
-                                        .scaleEffect(0.7)
-                                        .frame(width: 14, height: 14)
-                                } else {
-                                    Image(systemName: "arrow.clockwise")
-                                        .font(.system(size: 12))
-                                }
-                                Text(
-                                    updateService.isCheckingForUpdates
-                                        ? "Checking..." : "Check for Updates"
-                                )
-                                .font(Typography.labelMedium)
-                            }
-                            .foregroundStyle(Color.textPrimary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(Color.bgHover)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(updateService.isCheckingForUpdates)
-                    }
+                    Text("Transcription runs entirely on this Mac. SpeakType only uses the network when you explicitly download a model.")
+                        .font(Typography.captionSmall)
+                        .foregroundStyle(Color.textMuted)
                 }
-
-                // License - Hidden (logic kept for future use)
-                // SettingsSection {
-                //     SettingsSectionHeader(
-                //         icon: "key",
-                //         title: "License",
-                //         subtitle: licenseManager.isPro ? "Pro Active" : "Free Plan"
-                //     )
-                //
-                //     if licenseManager.isPro {
-                //         Button(action: { showDeactivateAlert = true }) {
-                //             Text("Deactivate License")
-                //                 .font(Typography.labelMedium)
-                //                 .frame(maxWidth: .infinity)
-                //         }
-                //         .buttonStyle(.stSecondary)
-                //     } else {
-                //         Button(action: { showLicenseSheet = true }) {
-                //             Text("Activate License")
-                //                 .font(Typography.labelMedium)
-                //                 .frame(maxWidth: .infinity)
-                //         }
-                //         .buttonStyle(.stPrimary)
-                //     }
-                // }
             }
             .padding(24)
-        }
-
-        .sheet(isPresented: $showLicenseSheet) {
-            LicenseView()
-                .environmentObject(licenseManager)
-        }
-        .alert("Deactivate License", isPresented: $showDeactivateAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Deactivate", role: .destructive) {
-                Task { try? await licenseManager.deactivateLicense() }
-            }
-        } message: {
-            Text("Are you sure you want to deactivate your Pro license?")
         }
     }
 

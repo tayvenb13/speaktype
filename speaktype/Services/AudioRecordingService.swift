@@ -373,7 +373,11 @@ class AudioRecordingService: NSObject, ObservableObject {
     }
 
     private func getRecordingsDirectory() -> URL {
-        // Use Application Support instead of Documents for app-managed storage
+        Self.recordingsDirectory()
+    }
+
+    /// App-managed recordings directory (Application Support/SpeakType/Recordings).
+    static func recordingsDirectory() -> URL {
         let appSupport = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
@@ -384,13 +388,21 @@ class AudioRecordingService: NSObject, ObservableObject {
             .appendingPathComponent("SpeakType")
             .appendingPathComponent("Recordings")
 
-        // Create directory if it doesn't exist
         try? FileManager.default.createDirectory(
             at: recordingsDir,
             withIntermediateDirectories: true
         )
 
         return recordingsDir
+    }
+
+    /// Copy an imported audio/video file into app-managed storage under a UUID filename,
+    /// so the original filename never leaks and copies don't collide. Returns the new URL.
+    static func importIntoAppStorage(_ source: URL) throws -> URL {
+        let ext = source.pathExtension.isEmpty ? "dat" : source.pathExtension
+        let dest = recordingsDirectory().appendingPathComponent("\(UUID().uuidString).\(ext)")
+        try FileManager.default.copyItem(at: source, to: dest)
+        return dest
     }
 
     private func getChunksDirectory() -> URL {

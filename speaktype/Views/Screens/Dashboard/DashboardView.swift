@@ -11,10 +11,6 @@ struct DashboardView: View {
     private var whisperService: WhisperService { WhisperService.shared }
     @State private var leftColumnHeight: CGFloat = 0
 
-    // Trial & License
-    @EnvironmentObject var trialManager: TrialManager
-    @EnvironmentObject var licenseManager: LicenseManager
-
     @AppStorage("selectedModelVariant") private var selectedModel: String = "openai_whisper-base"
     @AppStorage("transcriptionLanguage") private var transcriptionLanguage: String = "auto"
     @State private var showFileImporter = false
@@ -72,11 +68,6 @@ struct DashboardView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                // Trial Banner - Hidden (logic kept for future use)
-                // if !licenseManager.isPro {
-                //     TrialBanner(status: trialManager.trialStatus)
-                // }
-
                 // Two horizontal boxes: Stats + Activity Chart
                 HStack(alignment: .top, spacing: 20) {
                     // Left: Stats Card
@@ -136,7 +127,7 @@ struct DashboardView: View {
                                     .font(Typography.bodyMedium)
                                     .foregroundStyle(Color.textPrimary)
 
-                                Text("Press ⌘+Shift+Space to start recording")
+                                Text("Press ⌘2 to start recording")
                                     .font(Typography.bodySmall)
                                     .foregroundStyle(Color.textSecondary)
                             }
@@ -231,13 +222,10 @@ struct DashboardView: View {
         defer { if didStartAccessing { url.stopAccessingSecurityScopedResource() } }
 
         do {
-            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(
-                url.lastPathComponent)
-            try? FileManager.default.removeItem(at: tempURL)
-            try FileManager.default.copyItem(at: url, to: tempURL)
-            startTranscription(url: tempURL)
+            let importedURL = try AudioRecordingService.importIntoAppStorage(url)
+            startTranscription(url: importedURL)
         } catch {
-            print("Error copying file: \(error)")
+            print("Error importing file")
             startTranscription(url: url)
         }
     }

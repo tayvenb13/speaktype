@@ -148,6 +148,12 @@ struct AIModelsView: View {
                 )
                 .font(.system(size: 13))
                 .foregroundStyle(Color.textSecondary)
+
+                Text(
+                    "Downloading a model is the only time SpeakType uses the network — it contacts the model host (Hugging Face). After a model is installed, all transcription runs offline on this Mac."
+                )
+                .font(.system(size: 12))
+                .foregroundStyle(Color.textMuted)
             }
 
             Spacer()

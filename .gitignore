@@ -10,7 +10,7 @@ DerivedData/
 .swiftpm/
 .build/
 Packages/
-Package.resolved
+# Package.resolved is intentionally committed for reproducible dependency pinning.
 
 # Distribution
 dist/

@@ -175,15 +175,11 @@ class WhisperService {
         isTranscribing = true
         defer { isTranscribing = false }
 
-        print("Starting transcription for: \(audioFile.lastPathComponent)")
-
         do {
             let options = decodingOptions(for: language)
             let results = try await pipe.transcribe(audioPath: audioFile.path, decodeOptions: options)
             let text = Self.normalizedTranscription(
                 from: results.map { $0.text }.joined(separator: " "))
-
-            print("Transcription complete: \(text.prefix(50))...")
             return text
         } catch {
             print("Transcription failed: \(error.localizedDescription)")
@@ -203,15 +199,12 @@ class WhisperService {
             return ""
         }
 
-        print("🔪 Chunk transcription started: \(audioFile.lastPathComponent)")
-
         let results = try await pipe.transcribe(
             audioPath: audioFile.path,
             decodeOptions: decodingOptions(for: language)
         )
         let text = Self.normalizedTranscription(from: results.map { $0.text }.joined(separator: " "))
 
-        print("🔪 Chunk done: \(text.prefix(40))...")
         // Clean up temp chunk file after transcription
         try? FileManager.default.removeItem(at: audioFile)
         return text

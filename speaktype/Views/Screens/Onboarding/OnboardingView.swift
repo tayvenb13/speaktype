@@ -19,7 +19,7 @@ struct OnboardingView: View {
                         })
                         .transition(.opacity)
                     } else if currentPage == 1 {
-                        GlobeKeyOptimizationPage(action: {
+                        ShortcutIntroPage(action: {
                             withAnimation(.easeInOut(duration: 0.5)) { currentPage = 2 }
                         })
                         .transition(.opacity)
@@ -541,7 +541,7 @@ struct ContinueButton: View {
     }
 }
 
-struct GlobeKeyOptimizationPage: View {
+struct ShortcutIntroPage: View {
     let action: () -> Void
 
     var body: some View {
@@ -549,18 +549,18 @@ struct GlobeKeyOptimizationPage: View {
             Spacer()
 
             VStack(spacing: 16) {
-                Text("OPTIMIZE WORKFLOW")
+                Text("YOUR SHORTCUT")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(Color.textSecondary)
                     .textCase(.uppercase)
                     .tracking(2)
 
-                Text("The Globe Key")
+                Text("Press ⌘2 to dictate")
                     .font(.system(size: 40, weight: .regular, design: .serif))
                     .foregroundStyle(Color.textPrimary)
 
                 Text(
-                    "By default, macOS uses the \u{1F310} key to show the Emoji Picker, which interrupts SpeakType.\n\nPlease open Keyboard Settings and change **\"Press \u{1F310} key to\"** to **\"Do Nothing\"**."
+                    "Anywhere on your Mac, press **⌘2** to start dictating.\n\nHold it down and release when you're done, or switch to toggle mode in Settings to press once to start and again to stop. You can change the shortcut anytime under Settings → Shortcuts."
                 )
                 .font(.system(size: 15, weight: .regular))
                 .foregroundStyle(Color.textSecondary)
@@ -568,24 +568,6 @@ struct GlobeKeyOptimizationPage: View {
                 .frame(maxWidth: 420)
                 .lineSpacing(4)
             }
-
-            VStack(spacing: 12) {
-                Button(action: openKeyboardSettings) {
-                    HStack {
-                        Image(systemName: "switch.2")
-                        Text("Open Keyboard Settings")
-                    }
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(Color.bgApp)
-                    .frame(width: 260, height: 44)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color.textPrimary)
-                    )
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.top, 40)
 
             Spacer()
 
@@ -597,12 +579,6 @@ struct GlobeKeyOptimizationPage: View {
         }
         .padding(.horizontal, 60)
         .padding(.vertical, 40)
-    }
-
-    private func openKeyboardSettings() {
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.keyboard") {
-            NSWorkspace.shared.open(url)
-        }
     }
 }
 

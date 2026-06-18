@@ -190,17 +190,15 @@ struct TranscribeAudioView: View {
         // Given WhisperKit might need file access, let's copy to a temp location to be safe and avoid scope issues.
         
         do {
-            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
-            try? FileManager.default.removeItem(at: tempURL) // Clean up if exists
-            try FileManager.default.copyItem(at: url, to: tempURL)
-            
+            let importedURL = try AudioRecordingService.importIntoAppStorage(url)
+
             if didStartAccessing {
                 url.stopAccessingSecurityScopedResource()
             }
-            
-            startTranscription(url: tempURL)
+
+            startTranscription(url: importedURL)
         } catch {
-            print("Error copying file: \(error)")
+            print("Error importing file")
             if didStartAccessing {
                 url.stopAccessingSecurityScopedResource()
             }
@@ -217,17 +215,14 @@ struct TranscribeAudioView: View {
                 provider.loadFileRepresentation(forTypeIdentifier: UTType.content.identifier) { url, error in
                     if let url = url {
                         // LoadFileRepresentation gives us a temporary URL that might not persist.
-                        // We should copy it immediately.
-                        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
+                        // Copy it immediately into app-managed storage under a UUID name.
                         do {
-                            try? FileManager.default.removeItem(at: tempURL)
-                            try FileManager.default.copyItem(at: url, to: tempURL)
-                            
+                            let importedURL = try AudioRecordingService.importIntoAppStorage(url)
                             DispatchQueue.main.async {
-                                startTranscription(url: tempURL)
+                                startTranscription(url: importedURL)
                             }
                         } catch {
-                            print("Error copying dropped file: \(error)")
+                            print("Error importing dropped file")
                         }
                     }
                 }
