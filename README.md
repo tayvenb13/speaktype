@@ -1,13 +1,13 @@
-# SpeakType
+# speaktype-tb
 
 <div align="center">
 
-![SpeakType Icon](speaktype/Assets.xcassets/AppIcon.appiconset/icon_256x256.png)
+![speaktype-tb Icon](speaktype/Assets.xcassets/AppIcon.appiconset/icon_256x256.png)
 
-**Fast, Offline Voice-to-Text for macOS**
+**Fast, Offline, Private Voice-to-Text for macOS**
 
-![SpeakType app screenshot](image.png)
-[![Download](https://img.shields.io/badge/Download-SpeakType.dmg-blueviolet?logo=apple&logoColor=white)](https://github.com/karansinghgit/speaktype/releases/latest)
+![speaktype-tb app screenshot](image.png)
+[![Download](https://img.shields.io/badge/Download-speaktype--tb.dmg-blueviolet?logo=apple&logoColor=white)](https://github.com/tayvenb13/speaktype/releases/latest)
 [![Swift](https://img.shields.io/badge/Swift-5.9-orange?logo=swift)](https://swift.org)
 [![Platform](https://img.shields.io/badge/Platform-macOS%2013.0+-blue?logo=apple)](https://www.apple.com/macos/)
 [![License](https://img.shields.io/badge/License-MIT-red)](LICENSE)
@@ -18,12 +18,15 @@
 
 ---
 
-## What is SpeakType?
+## What is speaktype-tb?
 
-SpeakType is a **privacy-first, offline voice dictation tool** for macOS. Unlike online dictation services, everything runs **100% locally** using OpenAI's Whisper AI model via [WhisperKit](https://github.com/argmaxinc/WhisperKit). Support for Parakeet coming soon!
+`speaktype-tb` is a privacy-hardened fork of [SpeakType](https://github.com/karansinghgit/speaktype) — an **offline voice dictation tool** for macOS where everything runs **100% locally** using OpenAI's Whisper model via [WhisperKit](https://github.com/argmaxinc/WhisperKit).
 
-- **Privacy First** - Zero data leaves your Mac
-- **Lightning Fast** - Optimized for Apple Silicon
+This fork strips out everything that touches the network for non-transcription reasons: no license/activation server, no telemetry, and no auto-update checks. The **only** network access is the explicit, user-initiated model download (see [Privacy & Networking](#privacy--networking)).
+
+- **Private** - Audio and transcripts never leave your Mac
+- **Offline** - No account, no license check, no update pings
+- **Fast** - Optimized for Apple Silicon
 - **Works Everywhere** - Any app, any text field
 - **Open Source** - Audit every line of code yourself
 
@@ -39,21 +42,33 @@ SpeakType is a **privacy-first, offline voice dictation tool** for macOS. Unlike
 
 ### Download
 
-**[Download Latest Release](https://github.com/karansinghgit/speaktype/releases/latest)**
+**[Download Latest Release](https://github.com/tayvenb13/speaktype/releases/latest)**
 
-1. Download `SpeakType.dmg`
-2. Drag **SpeakType** to **Applications**
-3. Grant Microphone + Accessibility + Documents Folder permissions
-4. Download an AI model from Settings → AI Models
+1. Download `speaktype-tb.dmg` and open it
+2. Drag **speaktype-tb** to **Applications**
+3. First launch: right-click the app → **Open** (the release is ad-hoc signed, not notarized)
+4. Grant Microphone + Accessibility + Documents Folder permissions
+5. Download an AI model from Settings → AI Models
 
 Press `⌘2` to start dictating.
+
+> Releases are built and published automatically by the
+> [Build & Release workflow](.github/workflows/build-release.yml) whenever a `v*` tag is pushed.
 
 ### Build from Source
 
 ```bash
-git clone https://github.com/karansinghgit/speaktype.git
+git clone https://github.com/tayvenb13/speaktype.git
 cd speaktype
-make build && make run
+
+# Build a Release app (ad-hoc signed) into a local folder:
+xcodebuild build -scheme speaktype -configuration Release \
+  -destination 'platform=macOS' \
+  CONFIGURATION_BUILD_DIR=build \
+  CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="" \
+  CODE_SIGNING_REQUIRED=YES CODE_SIGNING_ALLOWED=YES
+
+open build   # build/speaktype-tb.app
 ```
 
 ---
@@ -76,7 +91,7 @@ Change the shortcut or switch between **Hold** and **Toggle** modes under Settin
 
 ## Privacy & Networking
 
-SpeakType is built for fully local, offline use:
+speaktype-tb is built for fully local, offline use:
 
 - **Transcription is 100% local.** Audio and transcripts never leave your Mac. There is no
   account, license check, telemetry, or update check.
