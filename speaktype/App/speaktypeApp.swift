@@ -17,12 +17,6 @@ struct speaktypeApp: App {
 
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
-    // License Manager
-    @StateObject private var licenseManager = LicenseManager.shared
-
-    // Trial Manager
-    @StateObject private var trialManager = TrialManager.shared
-
     init() {
         // For UI testing: bypass onboarding automatically
         if ProcessInfo.processInfo.arguments.contains("--uitesting") {
@@ -42,8 +36,6 @@ struct speaktypeApp: App {
                     }
                 }
             }
-            .environmentObject(licenseManager)
-            .environmentObject(trialManager)
             .preferredColorScheme(appTheme.colorScheme)
             .tint(Color.navyInk)
         }
@@ -58,7 +50,7 @@ struct speaktypeApp: App {
         // to prevent SwiftUI from auto-opening the main dashboard on activation.
 
         // Menu Bar Extra (Always running listener)
-        MenuBarExtra("SpeakType", systemImage: "waveform", isInserted: $showMenuBarIcon) {
+        MenuBarExtra("speaktype-tb", systemImage: "waveform", isInserted: $showMenuBarIcon) {
             ThemeProvider {
                 MenuBarDashboardView(
                     openDashboard: openDashboard,

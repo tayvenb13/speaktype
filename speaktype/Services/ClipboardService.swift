@@ -4,33 +4,17 @@ import Cocoa
 class ClipboardService {
     static let shared = ClipboardService()
 
-    // Dependency injection for license checking
-    private var licenseManager: LicenseManager {
-        return LicenseManager.shared
-    }
-
     private init() {}
 
-    // Copy text to system clipboard with optional promotional wrapper
+    // Copy text to system clipboard
     func copy(text: String) {
-        let finalText = wrapTextIfNeeded(text)
-
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setString(finalText, forType: .string)
+        pasteboard.setString(text, forType: .string)
 
-        // Verify write
-        if let check = pasteboard.string(forType: .string), check == finalText {
-            print("✅ Clipboard Write Verified: '\(check.prefix(20))...'")
-        } else {
-            print("❌ Clipboard Write FAILED!")
+        if pasteboard.string(forType: .string) != text {
+            print("❌ Clipboard write failed")
         }
-    }
-
-    // Wrap text with promotional message for free users
-    private func wrapTextIfNeeded(_ text: String) -> String {
-        // License check disabled - always allow unwrapped text
-        return text
     }
 
     // Paste content (Simulate Cmd+V)
@@ -60,22 +44,6 @@ class ClipboardService {
             vDown?.post(tap: .cghidEventTap)
             vUp?.post(tap: .cghidEventTap)
             cmdUp?.post(tap: .cghidEventTap)
-
-            print("Simulated Cmd+V")
-        }
-    }
-
-    // Fallback using AppleScript (more robust for some apps)
-    func appleScriptPaste() {
-        let script = "tell application \"System Events\" to keystroke \"v\" using command down"
-        if let appleScript = NSAppleScript(source: script) {
-            var error: NSDictionary?
-            appleScript.executeAndReturnError(&error)
-            if let error = error {
-                print("AppleScript Paste Error: \(error)")
-            } else {
-                print("Executed AppleScript Paste")
-            }
         }
     }
 

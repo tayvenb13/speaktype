@@ -46,7 +46,7 @@ SpeakType is a **privacy-first, offline voice dictation tool** for macOS. Unlike
 3. Grant Microphone + Accessibility + Documents Folder permissions
 4. Download an AI model from Settings → AI Models
 
-Press `fn` to start dictating.
+Press `⌘2` to start dictating.
 
 ### Build from Source
 
@@ -60,15 +60,38 @@ make build && make run
 
 ## Usage
 
-1. Press hotkey (`fn` by default)
+1. Press hotkey (`⌘2` by default)
 2. Speak your text
 3. Release hotkey
 4. Text appears!
+
+Change the shortcut or switch between **Hold** and **Toggle** modes under Settings → Shortcuts.
 
 **Tips:**
 - Speak naturally - Whisper handles accents well
 - Say punctuation: "comma", "period", "question mark"
 - Best results with 3-10 second clips
+
+---
+
+## Privacy & Networking
+
+SpeakType is built for fully local, offline use:
+
+- **Transcription is 100% local.** Audio and transcripts never leave your Mac. There is no
+  account, license check, telemetry, or update check.
+- **The only network access is model download.** When you explicitly download a model from
+  Settings → AI Models, the app contacts the model host (Hugging Face). This is the single
+  reason the `com.apple.security.network.client` entitlement is retained. Models are **never
+  downloaded automatically** — it is always an explicit user action. After a model is
+  installed, dictation works offline.
+- **Local data retention.** Recordings and imported files are stored under
+  `~/Library/Application Support/speaktype-tb/Recordings` with random (UUID) filenames.
+  "Clear All" in History permanently deletes both the transcripts and their saved audio.
+
+> Note: the app is **not** App-Sandboxed. A global hotkey event tap and synthetic paste both
+> require Accessibility access, which the macOS App Sandbox does not permit. Microphone,
+> user-selected file access, and model-download network access are the only entitlements.
 
 ---
 

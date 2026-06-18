@@ -62,7 +62,7 @@ struct HistoryView: View {
                                 .font(Typography.displaySmall)
                                 .foregroundStyle(Color.textPrimary)
                             
-                            Text("Press ⌘+Shift+Space to start recording")
+                            Text("Press ⌘2 to start recording")
                                 .font(Typography.bodyMedium)
                                 .foregroundStyle(Color.textSecondary)
                         }
@@ -128,7 +128,7 @@ struct HistoryView: View {
                 historyService.clearAll()
             }
         } message: {
-            Text("This removes your saved transcripts, but keeps your statistics history.")
+            Text("This permanently deletes your saved transcripts and their saved audio recordings. Your statistics history is kept.")
         }
         .alert(
             "Delete Transcript?",

@@ -1,8 +1,10 @@
 import Foundation
 import AppKit
+import CoreGraphics
 
 /// Hotkey options for triggering SpeakType recording
 enum HotkeyOption: String, Codable, CaseIterable, Identifiable {
+    case commandTwo = "commandTwo"
     case fn = "fn"
     case rightCommand = "rightCommand"
     case leftCommand = "leftCommand"
@@ -16,6 +18,8 @@ enum HotkeyOption: String, Codable, CaseIterable, Identifiable {
     /// Display name with appropriate symbols
     var displayName: String {
         switch self {
+        case .commandTwo:
+            return "⌘2"
         case .fn:
             return "Fn"
         case .rightCommand:
@@ -33,9 +37,11 @@ enum HotkeyOption: String, Codable, CaseIterable, Identifiable {
         }
     }
     
-    /// macOS keycode for this modifier key
+    /// macOS keycode for this key (the non-modifier key for combos)
     var keyCode: UInt16 {
         switch self {
+        case .commandTwo:
+            return 19  // "2"
         case .fn:
             return 63
         case .rightCommand:
@@ -56,6 +62,8 @@ enum HotkeyOption: String, Codable, CaseIterable, Identifiable {
     /// Modifier flag to check when key is pressed
     var modifierFlag: NSEvent.ModifierFlags {
         switch self {
+        case .commandTwo:
+            return .command
         case .fn:
             return .function
         case .rightCommand, .leftCommand:
@@ -66,10 +74,30 @@ enum HotkeyOption: String, Codable, CaseIterable, Identifiable {
             return .option
         }
     }
-    
+
+    /// True for pure-modifier hotkeys (tracked via flagsChanged). Combos use keyDown/keyUp.
+    var isModifierOnly: Bool {
+        switch self {
+        case .commandTwo:
+            return false
+        default:
+            return true
+        }
+    }
+
+    /// CGEventFlags required alongside the key for combo hotkeys (event-tap path).
+    var cgModifierFlag: CGEventFlags {
+        switch self {
+        case .commandTwo:
+            return .maskCommand
+        default:
+            return []
+        }
+    }
+
     /// Default hotkey option
     static var `default`: HotkeyOption {
-        return .fn
+        return .commandTwo
     }
 }
 

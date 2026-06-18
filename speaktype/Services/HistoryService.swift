@@ -90,6 +90,7 @@ class HistoryService: ObservableObject {
     }
     
     func clearAll() {
+        items.forEach(removeAudioFileIfNeeded(for:))
         items.removeAll()
         saveHistory()
     }

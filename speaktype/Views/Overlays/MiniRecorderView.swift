@@ -1,6 +1,7 @@
 import AVFoundation
 import Combine
 import CoreMedia
+import OSLog
 import SwiftUI
 
 struct MiniRecorderView: View {
@@ -461,7 +462,7 @@ struct MiniRecorderView: View {
 
         Task {
             let url = await audioRecorder.stopRecording()
-            debugLog("stopRecording returned: \(url?.absoluteString ?? "nil")")
+            debugLog("stopRecording returned: \(url != nil ? "recording" : "nil")")
 
             guard let url = url else {
                 debugLog("No recording URL, cancelling")
@@ -519,23 +520,12 @@ struct MiniRecorderView: View {
     }
 
     private func debugLog(_ message: String) {
-        let logPath = "/tmp/speaktype_debug.log"
-        let logEntry = "[\(Date())] \(message)\n"
-        if let data = logEntry.data(using: .utf8) {
-            if FileManager.default.fileExists(atPath: logPath) {
-                if let handle = FileHandle(forWritingAtPath: logPath) {
-                    handle.seekToEndOfFile()
-                    handle.write(data)
-                    handle.closeFile()
-                }
-            } else {
-                FileManager.default.createFile(atPath: logPath, contents: data)
-            }
-        }
+        // Routed through the unified log (no on-disk file, no transcript/path payloads).
+        AppLogger.ui.debug("\(message, privacy: .public)")
     }
 
     private func processRecording(url: URL) async {
-        debugLog("processRecording started with url: \(url.lastPathComponent)")
+        debugLog("processRecording started")
         do {
             // Ensure model is loaded before transcribing
             if !whisperService.isInitialized || whisperService.currentModelVariant != selectedModel
@@ -565,7 +555,7 @@ struct MiniRecorderView: View {
                 await MainActor.run { statusMessage = "Transcribing..." }
             }
             let text = try await whisperService.transcribe(audioFile: url, language: transcriptionLanguage)
-            debugLog("Transcription result: \(text.prefix(50))...")
+            debugLog("Transcription complete")
 
             guard !text.isEmpty else {
                 debugLog("Empty text, cancelling")
