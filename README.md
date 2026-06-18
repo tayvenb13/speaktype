@@ -86,7 +86,7 @@ SpeakType is built for fully local, offline use:
   downloaded automatically** — it is always an explicit user action. After a model is
   installed, dictation works offline.
 - **Local data retention.** Recordings and imported files are stored under
-  `~/Library/Application Support/SpeakType/Recordings` with random (UUID) filenames.
+  `~/Library/Application Support/speaktype-tb/Recordings` with random (UUID) filenames.
   "Clear All" in History permanently deletes both the transcripts and their saved audio.
 
 > Note: the app is **not** App-Sandboxed. A global hotkey event tap and synthetic paste both

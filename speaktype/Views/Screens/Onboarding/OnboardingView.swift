@@ -66,7 +66,7 @@ struct WelcomePage: View {
                     .textCase(.uppercase)
                     .tracking(2.5)
 
-                Text("SpeakType")
+                Text("speaktype-tb")
                     .font(.system(size: 48, weight: .regular, design: .serif))
                     .foregroundStyle(Color.textPrimary)
                     .tracking(-0.5)

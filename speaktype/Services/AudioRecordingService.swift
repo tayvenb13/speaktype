@@ -385,7 +385,7 @@ class AudioRecordingService: NSObject, ObservableObject {
 
         let recordingsDir =
             appSupport
-            .appendingPathComponent("SpeakType")
+            .appendingPathComponent("speaktype-tb")
             .appendingPathComponent("Recordings")
 
         try? FileManager.default.createDirectory(
@@ -413,7 +413,7 @@ class AudioRecordingService: NSObject, ObservableObject {
 
         let chunksDir =
             appSupport
-            .appendingPathComponent("SpeakType")
+            .appendingPathComponent("speaktype-tb")
             .appendingPathComponent("Chunks")
 
         try? FileManager.default.createDirectory(

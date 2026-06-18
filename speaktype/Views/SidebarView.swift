@@ -91,7 +91,7 @@ private struct SidebarHeader: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 48, height: 48)
 
-            Text("SpeakType")
+            Text("speaktype-tb")
                 .font(Typography.sidebarLogo)
                 .foregroundStyle(Color.textPrimary)
 
