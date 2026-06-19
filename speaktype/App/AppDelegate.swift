@@ -9,6 +9,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkeyEventTap: CFMachPort?
     private var hotkeyEventTapSource: CFRunLoopSource?
     var isHotkeyPressed = false
+    private var comboHotkeyActive = false
     private var lastHandledHotkeyTimestamp: TimeInterval = 0
     private var lastHandledHotkeyPressedState = false
     private var globalKeyDownMonitor: Any?
@@ -153,18 +154,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         case .keyDown, .keyUp:
             // Combo hotkeys (e.g. ⌘2) are non-modifier keys, so they ride keyDown/keyUp.
-            // Suppress them so the combo is not also delivered to the focused app.
             guard !currentHotkey.isModifierOnly, keyCode == currentHotkey.keyCode else {
                 return Unmanaged.passUnretained(event)
             }
             if type == .keyDown {
+                // Only claim the key when the combo's modifier is held; a bare "2" must
+                // pass through so the key still types normally.
                 guard event.flags.contains(currentHotkey.cgModifierFlag) else {
                     return Unmanaged.passUnretained(event)
                 }
+                comboHotkeyActive = true
                 DispatchQueue.main.async { [weak self] in
                     self?.handleHotkeyStateChange(isPressed: true)
                 }
             } else {
+                // Only swallow the key-up that pairs with a combo press we claimed; a bare
+                // "2" key-up must reach the focused app or the key appears broken.
+                guard comboHotkeyActive else {
+                    return Unmanaged.passUnretained(event)
+                }
+                comboHotkeyActive = false
                 DispatchQueue.main.async { [weak self] in
                     self?.handleHotkeyStateChange(isPressed: false)
                 }
